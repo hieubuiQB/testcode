@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:convert';
 import 'package:just_audio/just_audio.dart';
 
 import 'lyric.dart';
 
+// Main Application
 void main() {
   runApp(const MusicPlayerApp());
 }
@@ -13,7 +16,7 @@ class MusicPlayerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Zing MP3 Style Player',
+      title: 'Lyrics Sync Player',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -22,6 +25,7 @@ class MusicPlayerApp extends StatelessWidget {
   }
 }
 
+// Music Player Screen
 class MusicPlayerScreen extends StatefulWidget {
   const MusicPlayerScreen({Key? key}) : super(key: key);
 
@@ -39,14 +43,14 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
     super.initState();
     _audioPlayer.setUrl('https://storage.googleapis.com/ikara-storage/tmp/beat.mp3');
 
-    // Lắng nghe sự thay đổi thời lượng file nhạc
+    // Listen to audio duration
     _audioPlayer.durationStream.listen((duration) {
       setState(() {
         _duration = duration ?? Duration.zero;
       });
     });
 
-    // Lắng nghe sự thay đổi vị trí phát nhạc
+    // Listen to audio position
     _audioPlayer.positionStream.listen((position) {
       setState(() {
         _position = position;
@@ -66,16 +70,17 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Zing MP3 Player', style: TextStyle(color: Colors.white)),
+        title: const Text('Music Player', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.text_snippet, color: Colors.white),
             onPressed: () {
-              // Điều hướng tới trang lời bài hát
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LyricsScreen(audioPlayer: _audioPlayer)),
+                MaterialPageRoute(
+                  builder: (context) => LyricsScreen(audioPlayer: _audioPlayer),
+                ),
               );
             },
           ),
@@ -83,7 +88,6 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
       ),
       body: Column(
         children: [
-          // Ảnh album
           Expanded(
             child: Center(
               child: Container(
@@ -107,14 +111,12 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Tên bài hát và nghệ sĩ
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: const [
                 Text(
-                  'Tên bài hát',
+                  'Song Name',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24.0,
@@ -123,7 +125,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Tên nghệ sĩ',
+                  'Artist Name',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 18.0,
@@ -133,8 +135,6 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Thanh trượt (Seek Bar)
           Slider(
             activeColor: Colors.blueAccent,
             inactiveColor: Colors.grey,
@@ -144,10 +144,19 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             onChanged: (value) {
               final position = Duration(seconds: value.toInt());
               _audioPlayer.seek(position);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LyricsScreen(
+                    audioPlayer: _audioPlayer,
+                  ),
+                ),
+              );
+              setState(() {
+                _position = position;
+              });
             },
           ),
-
-          // Hiển thị thời gian đã phát và thời gian tổng cộng
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Row(
@@ -165,8 +174,6 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Nút điều khiển
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -174,9 +181,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                 icon: const Icon(Icons.skip_previous),
                 color: Colors.white,
                 iconSize: 48.0,
-                onPressed: () {
-                  // TODO: Thêm chức năng phát bài trước
-                },
+                onPressed: () {},
               ),
               const SizedBox(width: 20),
               IconButton(
@@ -197,9 +202,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                 icon: const Icon(Icons.skip_next),
                 color: Colors.white,
                 iconSize: 48.0,
-                onPressed: () {
-                  // TODO: Thêm chức năng phát bài tiếp theo
-                },
+                onPressed: () {},
               ),
             ],
           ),
@@ -209,10 +212,11 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
     );
   }
 
-  // Hàm định dạng thời gian hiển thị
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
 }
+
+
